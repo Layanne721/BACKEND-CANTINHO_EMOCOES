@@ -31,18 +31,30 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // Desabilita CSRF (necessário para APIs Stateless como a sua)
             .csrf(AbstractHttpConfigurer::disable)
+            
+            // Configura o CORS usando o método corsConfigurationSource() abaixo
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            
+            // Define que não haverá sessão no servidor (Statefull), pois usamos JWT
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            
+            // Configura as permissões de acesso
             .authorizeHttpRequests(authorize -> authorize
+                // LIBERA GERAL: Login, Cadastro, Health Check e Imagens
                 .requestMatchers("/auth/**", "/api/health", "/uploads/**").permitAll()
-                // --- NOVA REGRA PARA ADMINISTRADOR ---
+                
+                // REGRAS DE ACESSO
                 .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")
-                // -------------------------------------
                 .requestMatchers("/api/responsavel/**").hasRole("RESPONSAVEL")
                 .requestMatchers("/api/diario/**").authenticated() 
+                
+                // Qualquer outra coisa precisa estar logado
                 .anyRequest().authenticated()
             )
+            
+            // Adiciona o seu filtro de Token JWT antes do filtro padrão do Spring
             .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -53,11 +65,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        // --- AQUI ESTAVA O PROBLEMA ---
+        // Adicionei as portas 5174 e 5175 para garantir que funcione se o Vite mudar a porta
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:5173", 
+            "http://localhost:5174", 
+            "http://localhost:5175"
+        ));
+        
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "x-auth-token", "x-child-id"));
-        
         configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
