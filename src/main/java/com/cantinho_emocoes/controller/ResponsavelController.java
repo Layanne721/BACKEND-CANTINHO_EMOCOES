@@ -129,4 +129,5 @@ public class ResponsavelController {
                 .filter(d -> !"CRIATIVO".equalsIgnoreCase(d.getEmocao())) // Ignora desenhos na contagem
                 .collect(Collectors.groupingBy(Diario::getEmocao, Collectors.counting()));
     }
+    
 }
