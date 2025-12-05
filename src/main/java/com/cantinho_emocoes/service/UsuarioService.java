@@ -82,6 +82,34 @@ public class UsuarioService {
         return passwordEncoder.matches(pinDigitado, usuario.getPin());
     }
 
+    // --- MÉTODOS NOVOS PARA GERENCIAMENTO DE ALUNOS ---
+
+    @Transactional
+    public void atualizarAvatarDependente(Long id, String avatarUrl) {
+        Usuario crianca = usuarioRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+        crianca.setAvatarUrl(avatarUrl);
+        usuarioRepository.save(crianca);
+    }
+
+    @Transactional
+    public void atualizarDependente(Long id, String nome, LocalDate dataNascimento) {
+        Usuario crianca = usuarioRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+        crianca.setNome(nome);
+        if (dataNascimento != null) {
+            crianca.setDataNascimento(dataNascimento);
+        }
+        usuarioRepository.save(crianca);
+    }
+
+    @Transactional
+    public void excluirDependente(Long id) {
+        Usuario crianca = usuarioRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+        usuarioRepository.delete(crianca);
+    }
+
     // --- RECUPERAÇÃO DE SENHA ---
 
     @Transactional
@@ -135,26 +163,22 @@ public class UsuarioService {
         usuarioRepository.delete(responsavel);
     }
 
-    // --- NOVOS MÉTODOS PARA O ADMINISTRADOR (CORRIGIDOS) ---
+    // --- NOVOS MÉTODOS PARA O ADMINISTRADOR ---
 
     @Transactional(readOnly = true)
     public List<AdminUsuarioDTO> listarTodosUsuarios() {
-        // Busca todos os usuários do banco
         List<Usuario> todos = usuarioRepository.findAll();
         
         // Filtra apenas quem NÃO tem responsável (ou seja, Pais e Admins)
-        // Isso evita que as crianças apareçam soltas na lista principal
         return todos.stream()
                 .filter(u -> u.getResponsavel() == null) 
                 .map(this::converterParaAdminDTO)
                 .collect(Collectors.toList());
     }
 
-    // Método auxiliar para converter e preencher os filhos recursivamente
     private AdminUsuarioDTO converterParaAdminDTO(Usuario u) {
-        // Converte a lista de dependentes (filhos) para DTO também
         List<AdminUsuarioDTO> filhosDTO = u.getDependentes().stream()
-                .map(this::converterParaAdminDTO) // Recursão simples
+                .map(this::converterParaAdminDTO)
                 .collect(Collectors.toList());
 
         return new AdminUsuarioDTO(
@@ -163,7 +187,7 @@ public class UsuarioService {
                 u.getEmail(),
                 u.getPerfil(),
                 u.getDataCadastro(),
-                filhosDTO // Passa a lista de filhos para ficar aninhado
+                filhosDTO
         );
     }
     
@@ -181,7 +205,6 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
             .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com ID: " + id));
 
-        // --- TRAVA DE SEGURANÇA: Não permitir excluir contas de Administrador ---
         if (usuario.getPerfil() == Perfil.ADMINISTRADOR) {
             throw new RuntimeException("Não é permitido excluir contas de Administrador.");
         }

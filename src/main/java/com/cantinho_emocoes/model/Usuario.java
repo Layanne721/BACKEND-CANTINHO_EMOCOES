@@ -60,14 +60,17 @@ public class Usuario implements UserDetails {
     @OneToMany(mappedBy = "responsavel", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Usuario> dependentes = new ArrayList<>();
 
-    // Criança tem vários Diários (ISSO CORRIGE O CONFLITO E A EXCLUSÃO)
-    // O 'mappedBy' deve ser igual ao nome do atributo na classe Diario ('dependente')
+    // --- CORREÇÃO DO ERRO 500 (CASCADE) ---
+    // Agora, ao apagar o aluno, o banco apaga tudo relacionado a ele automaticamente.
+
     @OneToMany(mappedBy = "dependente", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Diario> diarios = new ArrayList<>();
 
-    // Se você tiver a classe Medalha, descomente abaixo:
-    // @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    // private List<Medalha> medalhas = new ArrayList<>();
+    @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Atividade> atividades = new ArrayList<>();
+
+    @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Avaliacao> avaliacoes = new ArrayList<>();
 
     // --- Recuperação de Senha ---
     @Column(name = "reset_token")
@@ -83,7 +86,6 @@ public class Usuario implements UserDetails {
     @Column(name = "nivel")
     private int nivel = 1;
 
-    // Construtor Vazio Obrigatório
     public Usuario() {}
 
     // --- Métodos do Spring Security ---
@@ -134,6 +136,12 @@ public class Usuario implements UserDetails {
     
     public List<Diario> getDiarios() { return diarios; }
     public void setDiarios(List<Diario> diarios) { this.diarios = diarios; }
+
+    public List<Atividade> getAtividades() { return atividades; }
+    public void setAtividades(List<Atividade> atividades) { this.atividades = atividades; }
+
+    public List<Avaliacao> getAvaliacoes() { return avaliacoes; }
+    public void setAvaliacoes(List<Avaliacao> avaliacoes) { this.avaliacoes = avaliacoes; }
 
     public String getResetToken() { return resetToken; }
     public void setResetToken(String resetToken) { this.resetToken = resetToken; }
