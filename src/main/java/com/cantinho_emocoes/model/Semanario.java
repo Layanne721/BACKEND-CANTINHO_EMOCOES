@@ -11,30 +11,49 @@ public class Semanario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Campo para armazenar o texto completo do Semanário (estrutura semanal)
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String textoSemanario; 
+    // Substituímos o textoSemanario único por dias específicos
+    @Column(columnDefinition = "TEXT")
+    private String segunda;
+
+    @Column(columnDefinition = "TEXT")
+    private String terca;
+
+    @Column(columnDefinition = "TEXT")
+    private String quarta;
+
+    @Column(columnDefinition = "TEXT")
+    private String quinta;
+
+    @Column(columnDefinition = "TEXT")
+    private String sexta;
 
     private LocalDateTime dataCriacao;
-    
-    // Campo para identificar a semana
     private String titulo; 
 
     public Semanario() {}
 
-    public Semanario(String textoSemanario, String titulo, LocalDateTime dataCriacao) {
-        this.textoSemanario = textoSemanario;
-        this.titulo = titulo;
-        this.dataCriacao = dataCriacao;
-    }
-
     // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public String getTextoSemanario() { return textoSemanario; }
-    public void setTextoSemanario(String textoSemanario) { this.textoSemanario = textoSemanario; }
+    
+    public String getSegunda() { return segunda; }
+    public void setSegunda(String segunda) { this.segunda = segunda; }
+
+    public String getTerca() { return terca; }
+    public void setTerca(String terca) { this.terca = terca; }
+
+    public String getQuarta() { return quarta; }
+    public void setQuarta(String quarta) { this.quarta = quarta; }
+
+    public String getQuinta() { return quinta; }
+    public void setQuinta(String quinta) { this.quinta = quinta; }
+
+    public String getSexta() { return sexta; }
+    public void setSexta(String sexta) { this.sexta = sexta; }
+
     public LocalDateTime getDataCriacao() { return dataCriacao; }
     public void setDataCriacao(LocalDateTime dataCriacao) { this.dataCriacao = dataCriacao; }
+    
     public String getTitulo() { return titulo; }
     public void setTitulo(String titulo) { this.titulo = titulo; }
 }

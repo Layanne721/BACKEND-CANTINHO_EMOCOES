@@ -1,6 +1,9 @@
 package com.cantinho_emocoes.dto;
 
-// DTO para receber o texto completo do Semanário
 public record SemanarioRequestDTO(
-    String texto
+    String segunda,
+    String terca,
+    String quarta,
+    String quinta,
+    String sexta
 ) {}
