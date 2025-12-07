@@ -11,7 +11,6 @@ public class Semanario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Substituímos o textoSemanario único por dias específicos
     @Column(columnDefinition = "TEXT")
     private String segunda;
 
@@ -26,6 +25,10 @@ public class Semanario {
 
     @Column(columnDefinition = "TEXT")
     private String sexta;
+
+    // --- NOVO CAMPO: Armazena a lista de objetivos como JSON (String) ---
+    @Column(columnDefinition = "TEXT")
+    private String objetivos;
 
     private LocalDateTime dataCriacao;
     private String titulo; 
@@ -50,6 +53,9 @@ public class Semanario {
 
     public String getSexta() { return sexta; }
     public void setSexta(String sexta) { this.sexta = sexta; }
+
+    public String getObjetivos() { return objetivos; }
+    public void setObjetivos(String objetivos) { this.objetivos = objetivos; }
 
     public LocalDateTime getDataCriacao() { return dataCriacao; }
     public void setDataCriacao(LocalDateTime dataCriacao) { this.dataCriacao = dataCriacao; }

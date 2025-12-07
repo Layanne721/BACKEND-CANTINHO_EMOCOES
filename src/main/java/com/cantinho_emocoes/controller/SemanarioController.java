@@ -28,12 +28,14 @@ public class SemanarioController {
             Semanario novoSemanario = new Semanario();
             novoSemanario.setTitulo("Planejamento Semanal");
             
-            // Previne erro de nulo se o professor não preencher algum dia
             novoSemanario.setSegunda(dto.segunda() != null ? dto.segunda() : "");
             novoSemanario.setTerca(dto.terca() != null ? dto.terca() : "");
             novoSemanario.setQuarta(dto.quarta() != null ? dto.quarta() : "");
             novoSemanario.setQuinta(dto.quinta() != null ? dto.quinta() : "");
             novoSemanario.setSexta(dto.sexta() != null ? dto.sexta() : "");
+            
+            // Salva os objetivos recebidos
+            novoSemanario.setObjetivos(dto.objetivos() != null ? dto.objetivos() : "[]");
             
             novoSemanario.setDataCriacao(LocalDateTime.now());
 
@@ -49,17 +51,16 @@ public class SemanarioController {
     // --- BUSCAR O ATUAL (ALUNO E PROFESSOR) ---
     @GetMapping("/atual")
     public ResponseEntity<?> getSemanarioAtual() {
-        // Busca o último criado
         Optional<Semanario> ultimo = semanarioRepository.findTopByOrderByDataCriacaoDesc();
 
         if (ultimo.isEmpty()) {
-            // CORREÇÃO DO ERRO 500: Se não existir, retorna um objeto vazio em vez de erro
             Semanario vazio = new Semanario();
             vazio.setSegunda("");
             vazio.setTerca("");
             vazio.setQuarta("");
             vazio.setQuinta("");
             vazio.setSexta("");
+            vazio.setObjetivos("[]");
             return ResponseEntity.ok(vazio);
         }
 

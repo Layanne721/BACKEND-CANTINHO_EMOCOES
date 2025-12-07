@@ -5,5 +5,6 @@ public record SemanarioRequestDTO(
     String terca,
     String quarta,
     String quinta,
-    String sexta
+    String sexta,
+    String objetivos // Novo campo JSON String
 ) {}
