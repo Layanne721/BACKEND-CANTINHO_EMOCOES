@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/atividades")
-@CrossOrigin(origins = "http://localhost:5173")
+
 public class AtividadeController {
 
     private final AtividadeRepository atividadeRepository;
@@ -34,37 +34,39 @@ public class AtividadeController {
 
     // --- ALUNO: SALVAR ATIVIDADE ---
     @PostMapping
-    public ResponseEntity<?> salvarAtividadeFeita(@RequestHeader("x-child-id") Long childId, @RequestBody Atividade atividade) {
+    public ResponseEntity<?> salvarAtividadeFeita(@RequestHeader("x-child-id") Long childId, @RequestBody Map<String, String> payload) {
         Usuario aluno = usuarioRepository.findById(childId)
                 .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
-        
-        atividade.setAluno(aluno);
-        atividade.setDataRealizacao(LocalDateTime.now());
-        atividadeRepository.save(atividade);
-        
-        return ResponseEntity.ok(Map.of("message", "Atividade entregue com sucesso!"));
+
+        Atividade nova = new Atividade();
+        nova.setTipo(payload.get("tipo"));
+        nova.setConteudo(payload.get("conteudo"));
+        nova.setDesenhoBase64(payload.get("desenhoBase64"));
+        nova.setDataRealizacao(LocalDateTime.now());
+        nova.setAluno(aluno);
+
+        atividadeRepository.save(nova);
+        return ResponseEntity.ok(Map.of("message", "Atividade salva!"));
     }
 
-    // --- PROFESSOR: LISTAR ATIVIDADES DO ALUNO ---
+    // --- ALUNO: LISTAR MINHAS ATIVIDADES ---
     @GetMapping("/aluno/{childId}")
-    public ResponseEntity<List<Atividade>> listarAtividadesDoAluno(@PathVariable Long childId) {
+    public ResponseEntity<List<Atividade>> listarAtividadesAluno(@PathVariable Long childId) {
         return ResponseEntity.ok(atividadeRepository.findByAlunoIdOrderByDataRealizacaoDesc(childId));
     }
 
-    // --- PROFESSOR: ENVIAR TAREFA ---
+    // --- PROFESSOR: DEFINIR TAREFA DA TURMA ---
     @PostMapping("/definir-tarefa")
     public ResponseEntity<?> definirTarefa(@RequestBody Map<String, String> payload) {
-        String tipo = payload.get("tipo");
-        String conteudo = payload.get("conteudo");
-
-        Tarefa novaTarefa = new Tarefa(tipo, conteudo, LocalDateTime.now());
-        tarefaRepository.save(novaTarefa);
-        
-        long total = tarefaRepository.count();
-        return ResponseEntity.ok(Map.of("message", "Tarefa definida e salva!", "totalEnviadas", total));
+        Tarefa t = new Tarefa();
+        t.setTipo(payload.get("tipo"));
+        t.setConteudo(payload.get("conteudo"));
+        t.setDataCriacao(LocalDateTime.now());
+        tarefaRepository.save(t);
+        return ResponseEntity.ok(Map.of("message", "Tarefa definida para todos!"));
     }
 
-    // --- ALUNO: TAREFA ATUAL ---
+    // --- ALUNO: VER TAREFA ATUAL ---
     @GetMapping("/tarefa-atual")
     public ResponseEntity<?> getTarefaAtual() {
         Optional<Tarefa> ultima = tarefaRepository.findTopByOrderByDataCriacaoDesc();
@@ -97,7 +99,7 @@ public class AtividadeController {
     // --- TOTAL ENVIADAS ---
     @GetMapping("/total-enviadas")
     public ResponseEntity<?> getTotalEnviadas() {
-        long total = tarefaRepository.count();
-        return ResponseEntity.ok(Map.of("total", total));
+        long count = tarefaRepository.count(); 
+        return ResponseEntity.ok(Map.of("total", count));
     }
 }

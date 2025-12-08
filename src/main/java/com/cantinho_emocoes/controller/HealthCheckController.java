@@ -12,8 +12,8 @@ import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api")
-// TROQUE O "*" POR ISTO:
-@CrossOrigin(origins = "http://localhost:5173")
+
+
 public class HealthCheckController {
 
     @Autowired

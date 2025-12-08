@@ -21,7 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
-// @CrossOrigin removido daqui! Deixe o SecurityConfig controlar isso.
+
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;

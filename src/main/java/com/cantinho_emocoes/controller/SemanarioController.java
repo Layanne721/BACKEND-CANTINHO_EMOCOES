@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/semanario")
-@CrossOrigin(origins = "http://localhost:5173")
+
 public class SemanarioController {
 
     private final SemanarioRepository semanarioRepository;
