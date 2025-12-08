@@ -17,7 +17,8 @@ public class CorsConfig {
                         .allowedOrigins(
                             "http://localhost:5173", 
                             "http://localhost:5174", 
-                            "http://localhost:5175"
+                            "http://localhost:5175",
+                            "https://frontend-cantinho-emocoes-1.onrender.com"
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS");
             }
