@@ -70,7 +70,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
             "http://localhost:5173", 
             "http://localhost:5174", 
-            "http://localhost:5175"
+            "http://localhost:5175",
+            "https://frontend-cantinho-emocoes-1.onrender.com"
         ));
         
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
