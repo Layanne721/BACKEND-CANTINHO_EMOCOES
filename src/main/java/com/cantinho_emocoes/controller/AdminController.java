@@ -10,7 +10,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
-
+// @CrossOrigin REMOVIDO
 public class AdminController {
 
     private final UsuarioService usuarioService;
@@ -19,14 +19,12 @@ public class AdminController {
         this.usuarioService = usuarioService;
     }
 
-    // Listar todos os usuários para o Dashboard
     @GetMapping("/usuarios")
     public ResponseEntity<List<AdminUsuarioDTO>> listarTodos() {
         List<AdminUsuarioDTO> usuarios = usuarioService.listarTodosUsuarios();
         return ResponseEntity.ok(usuarios);
     }
 
-    // Excluir um usuário pelo ID
     @DeleteMapping("/usuarios/{id}")
     public ResponseEntity<?> excluirUsuario(@PathVariable Long id) {
         try {

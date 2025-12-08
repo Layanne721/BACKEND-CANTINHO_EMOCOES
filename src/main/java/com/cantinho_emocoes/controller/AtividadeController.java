@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/atividades")
-
+// @CrossOrigin REMOVIDO
 public class AtividadeController {
 
     private final AtividadeRepository atividadeRepository;
@@ -32,7 +32,6 @@ public class AtividadeController {
         this.tarefaRepository = tarefaRepository;
     }
 
-    // --- ALUNO: SALVAR ATIVIDADE ---
     @PostMapping
     public ResponseEntity<?> salvarAtividadeFeita(@RequestHeader("x-child-id") Long childId, @RequestBody Map<String, String> payload) {
         Usuario aluno = usuarioRepository.findById(childId)
@@ -49,13 +48,11 @@ public class AtividadeController {
         return ResponseEntity.ok(Map.of("message", "Atividade salva!"));
     }
 
-    // --- ALUNO: LISTAR MINHAS ATIVIDADES ---
     @GetMapping("/aluno/{childId}")
     public ResponseEntity<List<Atividade>> listarAtividadesAluno(@PathVariable Long childId) {
         return ResponseEntity.ok(atividadeRepository.findByAlunoIdOrderByDataRealizacaoDesc(childId));
     }
 
-    // --- PROFESSOR: DEFINIR TAREFA DA TURMA ---
     @PostMapping("/definir-tarefa")
     public ResponseEntity<?> definirTarefa(@RequestBody Map<String, String> payload) {
         Tarefa t = new Tarefa();
@@ -66,7 +63,6 @@ public class AtividadeController {
         return ResponseEntity.ok(Map.of("message", "Tarefa definida para todos!"));
     }
 
-    // --- ALUNO: VER TAREFA ATUAL ---
     @GetMapping("/tarefa-atual")
     public ResponseEntity<?> getTarefaAtual() {
         Optional<Tarefa> ultima = tarefaRepository.findTopByOrderByDataCriacaoDesc();
@@ -76,7 +72,6 @@ public class AtividadeController {
         return ResponseEntity.ok(ultima.get());
     }
 
-    // --- ALUNO: PENDÊNCIAS ---
     @GetMapping("/pendentes")
     public ResponseEntity<?> getTarefasPendentes(@RequestHeader("x-child-id") Long childId) {
         List<Tarefa> ultimasTarefas = tarefaRepository.findTop10ByOrderByDataCriacaoDesc();
@@ -96,7 +91,6 @@ public class AtividadeController {
         return ResponseEntity.ok(pendentes);
     }
     
-    // --- TOTAL ENVIADAS ---
     @GetMapping("/total-enviadas")
     public ResponseEntity<?> getTotalEnviadas() {
         long count = tarefaRepository.count(); 

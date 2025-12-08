@@ -21,7 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
-
+// @CrossOrigin REMOVIDO
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -38,8 +38,6 @@ public class AuthController {
         this.usuarioService = usuarioService;
     }
 
-    // ... (Mantenha o resto dos métodos iguais, sem alterações na lógica) ...
-    // --- 1. REGISTRO ---
     @PostMapping("/register")
     public ResponseEntity<?> registerResponsavel(@RequestBody RegisterRequestDTO request) {
         if (usuarioRepository.findByEmail(request.email()).isPresent()) {
@@ -62,7 +60,6 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Conta criada com sucesso!"));
     }
 
-    // --- 2. LOGIN ---
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequestDTO request) {
         try {
@@ -77,7 +74,6 @@ public class AuthController {
         }
     }
 
-    // --- 3. VALIDAR PIN ---
     @PostMapping("/validar-pin")
     public ResponseEntity<?> validarPin(@RequestBody Map<String, String> request, @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -92,7 +88,6 @@ public class AuthController {
         }
     }
 
-    // --- 4. ATUALIZAR DADOS ---
     @PutMapping("/meu-perfil/dados")
     public ResponseEntity<?> updateMeusDados(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UsuarioUpdateDTO updateDTO) {
         if (userDetails == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -104,33 +99,28 @@ public class AuthController {
         }
     }
 
-    // --- 5. EXCLUIR CONTA ---
     @DeleteMapping("/meu-perfil")
     public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal UserDetails userDetails) {
         try {
             usuarioService.excluirContaFamilia(userDetails.getUsername());
             return ResponseEntity.ok(Map.of("message", "Conta excluída com sucesso."));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Erro ao excluir conta: " + e.getMessage()));
         }
     }
 
-    // --- 6. RECUPERAR SENHA (SOLICITAR) ---
     @PostMapping("/recuperar-senha")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         try {
             usuarioService.requestPasswordReset(request.getEmail());
             return ResponseEntity.ok(Map.of("message", "Se o e-mail existir, o link foi enviado."));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Erro ao enviar e-mail: " + e.getMessage()));
         }
     }
 
-    // --- 7. RECUPERAR SENHA (TROCAR) ---
     @PostMapping("/resetar-senha")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
         try {
@@ -141,7 +131,6 @@ public class AuthController {
         }
     }
     
-    // --- 8. ATUALIZAR AVATAR ---
     @PutMapping("/meu-perfil/avatar")
     public ResponseEntity<?> updateAvatar(@AuthenticationPrincipal UserDetails userDetails, @RequestBody AvatarSelectionDTO avatarDTO) {
         if (userDetails == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

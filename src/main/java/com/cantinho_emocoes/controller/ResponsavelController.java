@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/responsavel")
-@CrossOrigin(origins = "http://localhost:5173")
+
 public class ResponsavelController {
 
     private final UsuarioRepository usuarioRepository;

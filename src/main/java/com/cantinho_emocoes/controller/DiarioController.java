@@ -16,6 +16,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/diario")
+// @CrossOrigin REMOVIDO
 public class DiarioController {
 
     private final DiarioRepository diarioRepository;
@@ -26,7 +27,6 @@ public class DiarioController {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // LISTAR DIÁRIOS
     @GetMapping("/meus")
     public ResponseEntity<?> listarMeusDiarios(
             @RequestHeader("x-child-id") Long childId, 
@@ -38,9 +38,8 @@ public class DiarioController {
         return ResponseEntity.ok(diarios);
     }
 
-    // SALVAR TEXTO/EMOÇÃO (Diário Comum)
     @PostMapping
-    public ResponseEntity<?> salvarDiario(
+    public ResponseEntity<?> criarDiario(
             @RequestHeader("x-child-id") Long childId,
             @RequestBody Map<String, Object> payload) {
 
@@ -52,7 +51,6 @@ public class DiarioController {
         diario.setIntensidade((Integer) payload.get("intensidade"));
         diario.setRelato((String) payload.get("relato"));
         
-        // Verifica se veio um desenho junto com o texto (opcional)
         if (payload.containsKey("desenhoBase64")) {
             diario.setDesenhoBase64((String) payload.get("desenhoBase64"));
         }
@@ -65,7 +63,6 @@ public class DiarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Diário salvo com sucesso!"));
     }
 
-    // SALVAR DESENHO (Modo Galeria/Arte)
     @PostMapping("/desenho")
     public ResponseEntity<?> salvarDesenho(
             @RequestHeader("x-child-id") Long childId,
@@ -78,7 +75,6 @@ public class DiarioController {
 
         Diario novoDiario = new Diario();
         
-        // Define como 'CRIATIVO' para podermos filtrar no dashboard e não quebrar o gráfico de emoções
         novoDiario.setEmocao("CRIATIVO"); 
         
         novoDiario.setIntensidade(5); 
@@ -86,9 +82,9 @@ public class DiarioController {
         novoDiario.setDesenhoBase64(imagemBase64);
         novoDiario.setDataRegistro(LocalDateTime.now());
         novoDiario.setDependente(crianca);
-        
+
         diarioRepository.save(novoDiario);
-        
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Desenho salvo na galeria!"));
+
+        return ResponseEntity.ok(Map.of("message", "Desenho salvo na galeria!"));
     }
 }
