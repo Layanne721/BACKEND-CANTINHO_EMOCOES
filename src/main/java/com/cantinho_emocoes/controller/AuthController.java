@@ -21,7 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "http://localhost:5173")
+// @CrossOrigin removido daqui! Deixe o SecurityConfig controlar isso.
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -38,6 +38,7 @@ public class AuthController {
         this.usuarioService = usuarioService;
     }
 
+    // ... (Mantenha o resto dos métodos iguais, sem alterações na lógica) ...
     // --- 1. REGISTRO ---
     @PostMapping("/register")
     public ResponseEntity<?> registerResponsavel(@RequestBody RegisterRequestDTO request) {
@@ -84,7 +85,6 @@ public class AuthController {
         String pinDigitado = request.get("pin");
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
         
-        // Compara o PIN digitado com o PIN criptografado no banco
         if (passwordEncoder.matches(pinDigitado, usuario.getPin())) {
             return ResponseEntity.ok(Map.of("message", "PIN válido!"));
         } else {
@@ -141,11 +141,10 @@ public class AuthController {
         }
     }
     
-    // --- 8. ATUALIZAR AVATAR (NOVO) ---
+    // --- 8. ATUALIZAR AVATAR ---
     @PutMapping("/meu-perfil/avatar")
     public ResponseEntity<?> updateAvatar(@AuthenticationPrincipal UserDetails userDetails, @RequestBody AvatarSelectionDTO avatarDTO) {
         if (userDetails == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        
         try {
             usuarioService.atualizarAvatar(userDetails.getUsername(), avatarDTO.getAvatarUrl());
             return ResponseEntity.ok(Map.of(

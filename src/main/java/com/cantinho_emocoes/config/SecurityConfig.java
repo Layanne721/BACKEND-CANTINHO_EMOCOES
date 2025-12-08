@@ -31,24 +31,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Desabilita CSRF (API Stateless)
             .csrf(AbstractHttpConfigurer::disable)
-            
-            // Ativa o CORS usando a configuração definida abaixo
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            
-            // Sessão Stateless (Sem guardar estado no servidor)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Usa a configuração abaixo
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            
-            // Permissões de Rotas
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/auth/**", "/api/health", "/uploads/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/responsavel/**").hasRole("RESPONSAVEL")
-                .requestMatchers("/api/diario/**").authenticated()
+                .requestMatchers("/api/diario/**").authenticated() 
                 .anyRequest().authenticated()
             )
-            
             .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -59,16 +51,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // --- MUDANÇA PRINCIPAL AQUI ---
-        // Usamos setAllowedOriginPatterns("*") para liberar QUALQUER origem (Render, Local, Celular)
+        // --- CORREÇÃO DEFINITIVA PARA CORS ---
+        // Usa patterns com "*" para aceitar QUALQUER domínio (localhost, render, .shop, etc)
         configuration.setAllowedOriginPatterns(List.of("*"));
         
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        
-        // Libera todos os headers (Authorization, Content-Type, e os personalizados x-child-id)
         configuration.setAllowedHeaders(List.of("*"));
-        
-        // Permite credenciais (cookies/tokens) mesmo com o wildcard "*" (graças ao OriginPatterns)
         configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
