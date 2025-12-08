@@ -31,30 +31,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Desabilita CSRF (necessário para APIs Stateless como a sua)
+            // Desabilita CSRF (API Stateless)
             .csrf(AbstractHttpConfigurer::disable)
             
-            // Configura o CORS usando o método corsConfigurationSource() abaixo
+            // Ativa o CORS usando a configuração definida abaixo
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
-            // Define que não haverá sessão no servidor (Statefull), pois usamos JWT
+            // Sessão Stateless (Sem guardar estado no servidor)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             
-            // Configura as permissões de acesso
+            // Permissões de Rotas
             .authorizeHttpRequests(authorize -> authorize
-                // LIBERA GERAL: Login, Cadastro, Health Check e Imagens
                 .requestMatchers("/auth/**", "/api/health", "/uploads/**").permitAll()
-                
-                // REGRAS DE ACESSO
                 .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/responsavel/**").hasRole("RESPONSAVEL")
-                .requestMatchers("/api/diario/**").authenticated() 
-                
-                // Qualquer outra coisa precisa estar logado
+                .requestMatchers("/api/diario/**").authenticated()
                 .anyRequest().authenticated()
             )
             
-            // Adiciona o seu filtro de Token JWT antes do filtro padrão do Spring
             .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -65,17 +59,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // --- AQUI ESTAVA O PROBLEMA ---
-        // Adicionei as portas 5174 e 5175 para garantir que funcione se o Vite mudar a porta
-        configuration.setAllowedOrigins(List.of(
-            "http://localhost:5173", 
-            "http://localhost:5174", 
-            "http://localhost:5175",
-            "https://frontend-cantinho-emocoes-1.onrender.com"
-        ));
+        // --- MUDANÇA PRINCIPAL AQUI ---
+        // Usamos setAllowedOriginPatterns("*") para liberar QUALQUER origem (Render, Local, Celular)
+        configuration.setAllowedOriginPatterns(List.of("*"));
         
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "x-auth-token", "x-child-id"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        
+        // Libera todos os headers (Authorization, Content-Type, e os personalizados x-child-id)
+        configuration.setAllowedHeaders(List.of("*"));
+        
+        // Permite credenciais (cookies/tokens) mesmo com o wildcard "*" (graças ao OriginPatterns)
         configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

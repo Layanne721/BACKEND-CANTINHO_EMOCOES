@@ -11,7 +11,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173","https://frontend-cantinho-emocoes-1.onrender.com")
+                // .allowedOriginPatterns("*") libera para QUALQUER site (Render, Localhost, Celular)
+                // e funciona junto com .allowCredentials(true)
+                .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
