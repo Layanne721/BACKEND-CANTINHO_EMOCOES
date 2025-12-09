@@ -9,6 +9,12 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
     // Busca a última (mantemos para compatibilidade se precisar)
     Optional<Tarefa> findTopByOrderByDataCriacaoDesc();
     
-    // NOVO: Busca as últimas 10 tarefas lançadas pelo professor
+    // Busca as últimas 10 tarefas lançadas (agora são atribuições)
     List<Tarefa> findTop10ByOrderByDataCriacaoDesc();
+    
+    // NOVO: Busca todas as tarefas atribuídas a um aluno (para rastreamento de pendentes)
+    List<Tarefa> findByAlunoIdOrderByDataCriacaoDesc(Long alunoId);
+    
+    // NOVO: Conta o total de tarefas atribuídas a um aluno (para o dashboard)
+    long countByAlunoId(Long alunoId);
 }

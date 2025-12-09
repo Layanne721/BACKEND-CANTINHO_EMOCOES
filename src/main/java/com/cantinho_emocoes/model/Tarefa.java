@@ -1,5 +1,6 @@
 package com.cantinho_emocoes.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -15,6 +16,12 @@ public class Tarefa {
     private String conteudo; // A, B, 1...
 
     private LocalDateTime dataCriacao;
+    
+    // --- NOVO CAMPO: Aluno para quem a tarefa foi atribuída ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "aluno_id") 
+    @JsonIgnore
+    private Usuario aluno; 
 
     public Tarefa() {}
 
@@ -33,4 +40,8 @@ public class Tarefa {
     public void setConteudo(String conteudo) { this.conteudo = conteudo; }
     public LocalDateTime getDataCriacao() { return dataCriacao; }
     public void setDataCriacao(LocalDateTime dataCriacao) { this.dataCriacao = dataCriacao; }
+    
+    // NOVO GETTER/SETTER
+    public Usuario getAluno() { return aluno; }
+    public void setAluno(Usuario aluno) { this.aluno = aluno; }
 }
