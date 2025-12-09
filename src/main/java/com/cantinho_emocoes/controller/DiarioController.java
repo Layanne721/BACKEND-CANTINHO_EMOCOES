@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException; // Importação necessária
 import java.util.List;
 import java.util.Map;
 
@@ -86,5 +87,47 @@ public class DiarioController {
         diarioRepository.save(novoDiario);
 
         return ResponseEntity.ok(Map.of("message", "Desenho salvo na galeria!"));
+    }
+    
+    /**
+     * Endpoint para atualizar campos de um registro de diário existente, como a data.
+     */
+    @PatchMapping("/{diarioId}")
+    public ResponseEntity<?> atualizarDiario(
+            @PathVariable Long diarioId,
+            @RequestBody Map<String, Object> payload) {
+
+        Diario diarioExistente = diarioRepository.findById(diarioId)
+                .orElseThrow(() -> new RuntimeException("Registro de Diário não encontrado com ID: " + diarioId));
+
+        if (payload.containsKey("emocao")) {
+            diarioExistente.setEmocao((String) payload.get("emocao"));
+        }
+        
+        if (payload.containsKey("intensidade")) {
+            // A intensidade vem como Integer diretamente, não precisa de parse de String
+            diarioExistente.setIntensidade((Integer) payload.get("intensidade"));
+        }
+        
+        if (payload.containsKey("relato")) {
+            diarioExistente.setRelato((String) payload.get("relato"));
+        }
+        
+        // Permite a alteração da data (dataRegistro)
+        if (payload.containsKey("dataRegistro")) {
+             // A data deve ser enviada como String no formato ISO-8601 (ex: "2025-12-08T10:00:00")
+             String novaDataStr = (String) payload.get("dataRegistro");
+             try {
+                 // Converte a string para LocalDateTime
+                 LocalDateTime novaData = LocalDateTime.parse(novaDataStr);
+                 diarioExistente.setDataRegistro(novaData);
+             } catch (DateTimeParseException e) {
+                 return ResponseEntity.badRequest().body(Map.of("error", "Formato de data inválido. Use ISO-8601 (ex: 2025-12-08T10:00:00)."));
+             }
+        }
+        
+        diarioRepository.save(diarioExistente);
+
+        return ResponseEntity.ok(Map.of("message", "Registro de Diário atualizado com sucesso!"));
     }
 }
