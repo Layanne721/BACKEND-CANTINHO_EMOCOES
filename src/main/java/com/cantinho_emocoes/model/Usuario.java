@@ -72,6 +72,11 @@ public class Usuario implements UserDetails {
     @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Avaliacao> avaliacoes = new ArrayList<>();
 
+    // --- CORREÇÃO: Adicionando relacionamento com Tarefa para CASCADE ---
+    @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Tarefa> tarefas = new ArrayList<>(); 
+    // --------------------------------------------------------------------
+
     // --- Recuperação de Senha ---
     @Column(name = "reset_token")
     private String resetToken;
@@ -143,6 +148,11 @@ public class Usuario implements UserDetails {
     public List<Avaliacao> getAvaliacoes() { return avaliacoes; }
     public void setAvaliacoes(List<Avaliacao> avaliacoes) { this.avaliacoes = avaliacoes; }
 
+    // --- NOVO GETTER/SETTER PARA TAREFAS ---
+    public List<Tarefa> getTarefas() { return tarefas; }
+    public void setTarefas(List<Tarefa> tarefas) { this.tarefas = tarefas; }
+    // ----------------------------------------
+    
     public String getResetToken() { return resetToken; }
     public void setResetToken(String resetToken) { this.resetToken = resetToken; }
     
