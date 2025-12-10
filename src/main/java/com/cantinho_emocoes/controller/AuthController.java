@@ -21,7 +21,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
-// @CrossOrigin REMOVIDO
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -87,6 +86,46 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "PIN incorreto."));
         }
     }
+
+    // --- NOVA ROTA UNIFICADA PARA CORRIGIR O ERRO 500 ---
+    // DTO local para capturar tanto 'name' quanto 'nome' e 'avatarUrl'
+    public record PerfilCompletoDTO(String name, String nome, String avatarUrl) {}
+
+    @PutMapping("/meu-perfil")
+    public ResponseEntity<?> updatePerfilCompleto(@AuthenticationPrincipal UserDetails userDetails, @RequestBody PerfilCompletoDTO request) {
+        if (userDetails == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        
+        try {
+            String email = userDetails.getUsername();
+            String nomeAtualizado = "";
+
+            // 1. Atualiza Nome (verifica se veio como 'nome' ou 'name')
+            String novoNome = request.nome() != null ? request.nome() : request.name();
+            if (novoNome != null && !novoNome.isBlank()) {
+                usuarioService.atualizarNome(email, novoNome);
+                nomeAtualizado = novoNome;
+            }
+
+            // 2. Atualiza Avatar
+            if (request.avatarUrl() != null && !request.avatarUrl().isBlank()) {
+                usuarioService.atualizarAvatar(email, request.avatarUrl());
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "message", "Perfil atualizado com sucesso!",
+                "user", Map.of(
+                    "name", nomeAtualizado,
+                    "avatarUrl", request.avatarUrl() != null ? request.avatarUrl() : ""
+                )
+            ));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erro ao processar atualização: " + e.getMessage()));
+        }
+    }
+    // ----------------------------------------------------
 
     @PutMapping("/meu-perfil/dados")
     public ResponseEntity<?> updateMeusDados(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UsuarioUpdateDTO updateDTO) {
