@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/atividades")
@@ -34,6 +33,7 @@ public class AtividadeController {
         this.tarefaRepository = tarefaRepository;
     }
 
+    // --- SALVAR ATIVIDADE (ALUNO) ---
     @PostMapping
     public ResponseEntity<?> salvarAtividadeFeita(@RequestHeader("x-child-id") Long childId, @RequestBody Map<String, String> payload) {
         Usuario aluno = usuarioRepository.findById(childId)
@@ -55,12 +55,20 @@ public class AtividadeController {
         return ResponseEntity.ok(atividadeRepository.findByAlunoIdOrderByDataRealizacaoDesc(childId));
     }
 
-    /**
-     * Define uma nova tarefa/atividade e a atribui a uma lista de alunos.
-     */
+    // --- EXCLUIR ATIVIDADE (PROFESSOR) ---
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> excluirAtividadeRealizada(@PathVariable Long id) {
+        if (atividadeRepository.existsById(id)) {
+            atividadeRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // --- TAREFAS (ASSIGNMENTS) ---
+
     @PostMapping("/definir-tarefa")
     public ResponseEntity<?> definirTarefa(@RequestBody TarefaAssignmentDTO dto) {
-        
         if (dto.alunoIds() == null || dto.alunoIds().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Nenhum aluno selecionado."));
         }
@@ -68,25 +76,19 @@ public class AtividadeController {
         int count = 0;
         for (Long alunoId : dto.alunoIds()) {
             Usuario aluno = usuarioRepository.findById(alunoId).orElse(null);
-
             if (aluno != null) {
                 Tarefa t = new Tarefa();
                 t.setTipo(dto.tipo());
                 t.setConteudo(dto.conteudo());
                 t.setDataCriacao(LocalDateTime.now());
                 t.setAluno(aluno);
-                
                 tarefaRepository.save(t);
                 count++;
             }
         }
-        
         return ResponseEntity.ok(Map.of("message", String.format("Tarefa definida para %d aluno(s)!", count)));
     }
 
-    /**
-     * Retorna a "última" tarefa em geral (mantida para compatibilidade).
-     */
     @GetMapping("/tarefa-atual")
     public ResponseEntity<?> getTarefaAtual() {
         Optional<Tarefa> ultima = tarefaRepository.findTopByOrderByDataCriacaoDesc(); 
@@ -94,51 +96,51 @@ public class AtividadeController {
             return ResponseEntity.ok(Map.of("tipo", "LIVRE", "conteudo", ""));
         }
         Tarefa t = ultima.get();
-        return ResponseEntity.ok(Map.of(
-            "tipo", t.getTipo(), 
-            "conteudo", t.getConteudo()
-        ));
+        return ResponseEntity.ok(Map.of("tipo", t.getTipo(), "conteudo", t.getConteudo()));
     }
 
-    /**
-     * Lista as tarefas que o aluno TEM que fazer (Pendentes).
-     * CORREÇÃO: Usa contagem para garantir que se o prof mandou 2 atividades iguais,
-     * o aluno tenha que fazer 2 vezes.
-     */
+    // --- CÁLCULO DE PENDÊNCIAS ---
     @GetMapping("/pendentes")
     public ResponseEntity<?> getTarefasPendentes(@RequestHeader("x-child-id") Long childId) {
-        
-        // 1. Busca todas as tarefas atribuídas a este aluno (da mais recente para a mais antiga)
+        // Busca tarefas e atividades
         List<Tarefa> tarefasAtribuidas = tarefaRepository.findByAlunoIdOrderByDataCriacaoDesc(childId); 
-        
-        // 2. Busca todas as atividades COMPLETADAS por este aluno
         List<Atividade> atividadesFeitas = atividadeRepository.findByAlunoIdOrderByDataRealizacaoDesc(childId);
 
-        // 3. Cria um mapa de contagem das atividades feitas: "TIPO|CONTEUDO" -> Quantidade
+        // Agrupa atividades feitas (normalizando texto)
         Map<String, Long> contagemFeitas = atividadesFeitas.stream()
             .collect(Collectors.groupingBy(
-                a -> a.getTipo() + "|" + (a.getConteudo() == null ? "" : a.getConteudo()),
+                a -> {
+                    String c = a.getConteudo() == null ? "" : a.getConteudo().trim().toUpperCase();
+                    return a.getTipo() + "|" + c;
+                },
                 Collectors.counting()
             ));
 
         List<Tarefa> pendentes = new ArrayList<>();
 
-        // 4. Itera sobre as atribuições e "abate" do saldo de feitas
+        // Abate as feitas das atribuídas
         for (Tarefa tarefa : tarefasAtribuidas) {
-            String chave = tarefa.getTipo() + "|" + (tarefa.getConteudo() == null ? "" : tarefa.getConteudo());
+            String conteudo = tarefa.getConteudo() == null ? "" : tarefa.getConteudo().trim().toUpperCase();
+            String chave = tarefa.getTipo() + "|" + conteudo;
             
             if (contagemFeitas.containsKey(chave) && contagemFeitas.get(chave) > 0) {
-                // Se existe uma realização sobrando para este tipo de tarefa, usamos ela para "quitar" esta pendência
                 contagemFeitas.put(chave, contagemFeitas.get(chave) - 1);
             } else {
-                // Se não tem saldo (o aluno não fez vezes suficientes), adiciona na lista de pendentes
                 pendentes.add(tarefa);
             }
         }
-
         return ResponseEntity.ok(pendentes);
     }
     
+    // --- CONTAGEM ESPECÍFICA DE TAREFAS "LIVRE" ---
+    @GetMapping("/contar-tarefas-livre/{alunoId}")
+    public ResponseEntity<?> contarTarefasLivreAtribuidas(@PathVariable Long alunoId) {
+        List<Tarefa> tarefas = tarefaRepository.findByAlunoIdOrderByDataCriacaoDesc(alunoId);
+        long count = tarefas.stream().filter(t -> "LIVRE".equalsIgnoreCase(t.getTipo())).count();
+        return ResponseEntity.ok(Map.of("total", count));
+    }
+
+    // --- ENDPOINTS GERAIS ---
     @GetMapping("/total-enviadas-global")
     public ResponseEntity<?> getTotalEnviadasGlobal() {
         long count = tarefaRepository.count(); 
@@ -149,5 +151,33 @@ public class AtividadeController {
     public ResponseEntity<?> getTotalAtribuidas(@PathVariable Long childId) {
         long count = tarefaRepository.countByAlunoId(childId); 
         return ResponseEntity.ok(Map.of("total", count));
+    }
+
+    // --- GERENCIAMENTO DE TAREFAS (PROFESSOR) ---
+    @GetMapping("/tarefas-recentes")
+    public ResponseEntity<List<Tarefa>> listarTarefasRecentes() {
+        List<Tarefa> todas = tarefaRepository.findAll();
+        todas.sort((t1, t2) -> t2.getDataCriacao().compareTo(t1.getDataCriacao()));
+        if(todas.size() > 50) todas = todas.subList(0, 50);
+        return ResponseEntity.ok(todas);
+    }
+
+    @DeleteMapping("/tarefas/{id}")
+    public ResponseEntity<?> excluirTarefa(@PathVariable Long id) {
+        if(tarefaRepository.existsById(id)) {
+            tarefaRepository.deleteById(id);
+            return ResponseEntity.ok(Map.of("message", "Tarefa excluída com sucesso!"));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @PutMapping("/tarefas/{id}")
+    public ResponseEntity<?> atualizarTarefa(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+        return tarefaRepository.findById(id).map(t -> {
+            if(payload.containsKey("conteudo")) t.setConteudo(payload.get("conteudo"));
+            if(payload.containsKey("tipo")) t.setTipo(payload.get("tipo"));
+            tarefaRepository.save(t);
+            return ResponseEntity.ok(Map.of("message", "Tarefa atualizada!"));
+        }).orElse(ResponseEntity.notFound().build());
     }
 }
